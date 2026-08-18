@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface Category {
   id: string;
@@ -25,6 +26,8 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
   selectedCategory,
   onCategorySelect,
 }) => {
+  const { colors } = useTheme();
+
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'events':
@@ -50,19 +53,20 @@ const CategoryTabs: React.FC<CategoryTabsProps> = ({
           key={category.id}
           style={[
             styles.tab,
-            selectedCategory === category.id && styles.tabSelected,
+            selectedCategory === category.id && [styles.tabSelected, { backgroundColor: colors.primary }],
           ]}
           onPress={() => onCategorySelect(category.id)}>
           <Icon
             name={getCategoryIcon(category.icon)}
             size={20}
-            color={selectedCategory === category.id ? '#FFFFFF' : '#666'}
+            color={selectedCategory === category.id ? '#FFFFFF' : colors.textSecondary}
             style={styles.icon}
           />
           <Text
             style={[
               styles.tabText,
               selectedCategory === category.id && styles.tabTextSelected,
+              { color: selectedCategory === category.id ? '#FFFFFF' : colors.textSecondary },
             ]}>
             {category.name}
           </Text>
@@ -80,7 +84,6 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 25,
@@ -88,18 +91,13 @@ const styles = StyleSheet.create({
     minWidth: 100,
     justifyContent: 'center',
   },
-  tabSelected: {
-    backgroundColor: '#3498DB',
-  },
+  tabSelected: {},
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
     marginLeft: 6,
   },
-  tabTextSelected: {
-    color: '#FFFFFF',
-  },
+  tabTextSelected: {},
   icon: {
     marginRight: 4,
   },

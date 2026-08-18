@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import DatabaseManager from './src/database/DatabaseManager';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -29,7 +30,11 @@ const App: React.FC = () => {
     );
   }
 
-  return <AppNavigator />;
+  return (
+    <ThemeProvider>
+      <AppNavigator />
+    </ThemeProvider>
+  );
 };
 
 const styles = StyleSheet.create({

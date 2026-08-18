@@ -6,31 +6,29 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
 import DatabaseManager from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
 import { useTheme } from '../context/ThemeContext';
 
-const BookmarksScreen: React.FC = ({ navigation }: any) => {
+const EventsScreen: React.FC = ({ navigation }: any) => {
   const { colors } = useTheme();
-  const [bookmarks, setBookmarks] = useState<NewsItem[]>([]);
+  const [events, setEvents] = useState<NewsItem[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   useEffect(() => {
-    loadBookmarks();
+    loadEvents();
   }, []);
 
-  const loadBookmarks = async () => {
+  const loadEvents = async () => {
     setRefreshing(true);
     try {
-      const bookmarkedNews = await DatabaseManager.getBookmarks(1);
-      setBookmarks(bookmarkedNews);
+      const eventsNews = await DatabaseManager.getNewsByCategory('events');
+      setEvents(eventsNews);
     } catch (error) {
-      console.error('Error loading bookmarks:', error);
+      console.error('Error loading events:', error);
     } finally {
       setRefreshing(false);
     }
@@ -40,28 +38,22 @@ const BookmarksScreen: React.FC = ({ navigation }: any) => {
     navigation.navigate('NewsDetail', { news: newsItem });
   };
 
-  const handleBookmark = async (newsId: number) => {
-    await DatabaseManager.removeBookmark(newsId, 1);
-    loadBookmarks();
-  };
-
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
     <NewsCard
       news={item}
       onPress={handleNewsPress}
-      onBookmark={handleBookmark}
-      isBookmarked={true}
+      onBookmark={async () => {}}
+      isBookmarked={false}
     />
   );
 
   const renderEmptyState = () => (
     <View style={[styles.emptyState, { alignItems: 'center', paddingHorizontal: 40 }]}>
-      <Icon name="bookmark-border" size={64} color={colors.emptyStateIcon} />
       <Text style={[styles.emptyStateTitle, { color: colors.text, marginTop: 16, marginBottom: 8 }]}>
-        No Bookmarks Yet
+        No Events Yet
       </Text>
       <Text style={[styles.emptyStateText, { color: colors.textSecondary, textAlign: 'center', lineHeight: 22 }]}>
-        Save interesting news articles to read later by tapping the bookmark icon.
+        Upcoming campus events will appear here.
       </Text>
     </View>
   );
@@ -75,24 +67,24 @@ const BookmarksScreen: React.FC = ({ navigation }: any) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Bookmarks</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Your saved articles</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Events</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Campus events & activities</Text>
       </View>
 
-      {/* Bookmarked News */}
+      {/* Events List */}
       <FlatList
-        data={bookmarks}
+        data={events}
         renderItem={renderNewsItem}
         keyExtractor={item => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
-          bookmarks.length === 0 ? styles.emptyContainer : styles.listContainer
+          events.length === 0 ? styles.emptyContainer : styles.listContainer
         }
         ListEmptyComponent={renderEmptyState}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={loadBookmarks}
+            onRefresh={loadEvents}
             colors={[colors.primary]}
             tintColor={colors.primary}
           />
@@ -144,4 +136,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BookmarksScreen;
+export default EventsScreen;

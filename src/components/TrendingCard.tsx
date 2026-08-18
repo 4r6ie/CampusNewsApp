@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 interface TrendingCardProps {
   news: NewsItem;
@@ -18,20 +19,22 @@ interface TrendingCardProps {
 const { width } = Dimensions.get('window');
 
 const TrendingCard: React.FC<TrendingCardProps> = ({ news, onPress, index }) => {
+  const { colors } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(news)}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: colors.trendingBackground }]} onPress={() => onPress(news)}>
       <View style={styles.rankContainer}>
         <Text style={styles.rank}>#{index + 1}</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
           {news.title}
         </Text>
         <View style={styles.footer}>
-          <Text style={styles.category}>{news.category.toUpperCase()}</Text>
+          <Text style={[styles.category, { color: colors.textSecondary }]}>{news.category.toUpperCase()}</Text>
           <View style={styles.meta}>
-            <Icon name="schedule" size={12} color="#666" />
-            <Text style={styles.readTime}>{news.readTime}m</Text>
+            <Icon name="schedule" size={12} color={colors.textSecondary} />
+            <Text style={[styles.readTime, { color: colors.textSecondary }]}>{news.readTime}m</Text>
           </View>
         </View>
       </View>
@@ -44,7 +47,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginVertical: 4,
@@ -79,7 +81,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2C3E50',
     marginBottom: 8,
   },
   footer: {
@@ -89,7 +90,6 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 12,
-    color: '#666',
     fontWeight: '500',
   },
   meta: {
@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
   },
   readTime: {
     fontSize: 12,
-    color: '#666',
     marginLeft: 4,
   },
 });

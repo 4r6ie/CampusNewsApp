@@ -1,0 +1,6 @@
+{
+  "folder": "docs/daily-notes",
+  "template": ".obsidian/templates/daily-note.md",
+  "dateFormat": "YYYY-MM-DD",
+  "openOnStartup": false
+}

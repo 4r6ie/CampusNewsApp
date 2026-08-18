@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
+import { useTheme } from '../context/ThemeContext';
 
 interface NewsCardProps {
   news: NewsItem;
@@ -23,6 +24,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
   onBookmark,
   isBookmarked,
 }) => {
+  const { colors } = useTheme();
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'events':
@@ -37,7 +40,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(news)}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: colors.surface }]} onPress={() => onPress(news)}>
       <View style={styles.cardHeader}>
         <View
           style={[
@@ -55,15 +58,15 @@ const NewsCard: React.FC<NewsCardProps> = ({
         )}
       </View>
 
-      <Text style={styles.title}>{news.title}</Text>
-      <Text style={styles.content} numberOfLines={2}>
+      <Text style={[styles.title, { color: colors.text }]}>{news.title}</Text>
+      <Text style={[styles.content, { color: colors.textSecondary }]} numberOfLines={2}>
         {news.content}
       </Text>
 
       <View style={styles.cardFooter}>
         <View style={styles.metaInfo}>
-          <Text style={styles.author}>{news.author}</Text>
-          <Text style={styles.readTime}>{news.readTime} min read</Text>
+          <Text style={[styles.author, { color: colors.text }]}>{news.author}</Text>
+          <Text style={[styles.readTime, { color: colors.textSecondary }]}>{news.readTime} min read</Text>
         </View>
         <TouchableOpacity
           style={styles.bookmarkButton}
@@ -71,7 +74,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
           <Icon
             name={isBookmarked ? 'bookmark' : 'bookmark-border'}
             size={24}
-            color={isBookmarked ? '#FFD700' : '#666'}
+            color={isBookmarked ? '#FFD700' : colors.textSecondary}
           />
         </TouchableOpacity>
       </View>
@@ -81,7 +84,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
@@ -125,12 +127,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#2C3E50',
     marginBottom: 8,
   },
   content: {
     fontSize: 14,
-    color: '#7F8C8D',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -144,12 +144,10 @@ const styles = StyleSheet.create({
   },
   author: {
     fontSize: 12,
-    color: '#34495E',
     fontWeight: '600',
   },
   readTime: {
     fontSize: 11,
-    color: '#95A5A6',
   },
   bookmarkButton: {
     padding: 4,

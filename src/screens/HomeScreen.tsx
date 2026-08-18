@@ -14,8 +14,10 @@ import NewsCard from '../components/NewsCard';
 import CategoryTabs from '../components/CategoryTabs';
 import SearchBar from '../components/SearchBar';
 import TrendingCard from '../components/TrendingCard';
+import { useTheme } from '../context/ThemeContext';
 
 const HomeScreen: React.FC = ({ navigation }: any) => {
+  const { colors } = useTheme();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsItem[]>([]);
   const [trendingNews, setTrendingNews] = useState<NewsItem[]>([]);
@@ -77,10 +79,9 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
   };
 
   const handleBookmark = async (newsId: number) => {
-    // Toggle bookmark
     if (bookmarks.includes(newsId)) {
       setBookmarks(bookmarks.filter(id => id !== newsId));
-      await DatabaseManager.removeBookmark(newsId, 1); // Assuming user ID 1 for demo
+      await DatabaseManager.removeBookmark(newsId, 1);
     } else {
       setBookmarks([...bookmarks, newsId]);
       await DatabaseManager.addBookmark(newsId, 1);
@@ -105,13 +106,16 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar
+        barStyle={colors.background === '#121212' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Campus News</Text>
-        <Text style={styles.headerSubtitle}>Stay updated with campus life</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Campus News</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Stay updated with campus life</Text>
       </View>
 
       {/* Search Bar */}
@@ -131,7 +135,7 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
       {/* Trending Section */}
       {trendingNews.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending Now</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Trending Now</Text>
           <FlatList
             data={trendingNews}
             renderItem={renderTrendingItem}
@@ -144,7 +148,7 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
 
       {/* News List */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {selectedCategory === 'all' ? 'Latest News' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
         </Text>
         <FlatList
@@ -153,7 +157,12 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
           keyExtractor={item => item.id.toString()}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={loadData} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadData}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
           }
           contentContainerStyle={styles.newsList}
         />
@@ -165,7 +174,6 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingHorizontal: 16,
@@ -175,11 +183,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2C3E50',
   },
   headerSubtitle: {
     fontSize: 16,
-    color: '#7F8C8D',
     marginTop: 4,
   },
   section: {
@@ -188,7 +194,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2C3E50',
     marginHorizontal: 16,
     marginBottom: 12,
   },

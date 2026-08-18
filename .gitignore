@@ -39,3 +39,11 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Obsidian
+.obsidian/workspace.json
+.obsidian/workspace-*.json
+.obsidian/plugins/*/data.json
+.obsidian/plugins/*/plugin-data.json
+docs/daily-notes/
+docs/attachments/

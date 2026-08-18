@@ -1,0 +1,26 @@
+{
+  "defaultViewMode": "source",
+  "showLineNumber": false,
+  "showFrontmatter": false,
+  "foldHeading": true,
+  "foldIndent": false,
+  "readableLineLength": true,
+  "showUnsupportedFiles": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "",
+  "attachmentFolderPath": "attachments",
+  "defaultNewFileName": "Untitled",
+  "promptDelete": true,
+  "alwaysUpdateLinks": true,
+  "useMarkdownLinks": false,
+  "strictLineBreaks": false,
+  "showInlineTitle": true,
+  "autoConvertHtml": true,
+  "foldFrontmatter": true,
+  "pdfExportSettings": {
+    "pageSize": "Letter",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  }
+}

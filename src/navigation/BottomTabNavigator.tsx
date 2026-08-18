@@ -1,20 +1,24 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import HomeScreen from '../screens/HomeScreen';
+import EventsScreen from '../screens/EventsScreen';
 import BookmarksScreen from '../screens/BookmarksScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
 const BottomTabNavigator: React.FC = () => {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.background,
           borderTopWidth: 1,
-          borderTopColor: '#ECF0F1',
+          borderTopColor: colors.border,
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
@@ -23,8 +27,8 @@ const BottomTabNavigator: React.FC = () => {
           fontSize: 12,
           fontWeight: '500',
         },
-        tabBarActiveTintColor: '#3498DB',
-        tabBarInactiveTintColor: '#95A5A6',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
       }}>
       <Tab.Screen
@@ -38,7 +42,7 @@ const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Events"
-        component={BookmarksScreen}
+        component={EventsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Icon name="event" size={size} color={color} />
