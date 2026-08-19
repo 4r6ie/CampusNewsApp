@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   StatusBar,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem, Category } from '../types';
 import { getAllNews, getTrendingNews, addBookmark, removeBookmark } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
@@ -114,8 +116,13 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Campus News</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Stay updated with campus life</Text>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Campus News</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Stay updated with campus life</Text>
+        </View>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Profile')}>
+          <Icon name="notifications" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
@@ -176,9 +183,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 28,
@@ -187,6 +200,9 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     marginTop: 4,
+  },
+  headerButton: {
+    padding: 8,
   },
   section: {
     marginTop: 16,

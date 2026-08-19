@@ -8,10 +8,11 @@ import {
   StatusBar,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
-import { getBookmarks, removeBookmark } from '../database/DatabaseManager';
+import { getBookmarks, removeBookmark, clearAllBookmarks } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -75,8 +76,27 @@ const BookmarksScreen: React.FC = ({ navigation }: any) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Bookmarks</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Your saved articles</Text>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Bookmarks</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Your saved articles</Text>
+        </View>
+        {bookmarks.length > 0 && (
+          <TouchableOpacity style={styles.headerButton} onPress={() => {
+            Alert.alert(
+              'Clear All Bookmarks',
+              'Are you sure you want to remove all saved articles?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Clear', style: 'destructive', onPress: () => {
+                  clearAllBookmarks(1);
+                  loadBookmarks();
+                }},
+              ]
+            );
+          }}>
+            <Icon name="delete-sweep" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Bookmarked News */}
@@ -107,9 +127,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 28,
@@ -118,6 +144,9 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     marginTop: 4,
+  },
+  headerButton: {
+    padding: 8,
   },
   listContainer: {
     paddingBottom: 20,

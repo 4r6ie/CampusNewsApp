@@ -189,6 +189,19 @@ export const getBookmarks = (userId: number): NewsItem[] => {
   }
 };
 
+export const clearAllBookmarks = (userId: number): void => {
+  try {
+    db.runSync(
+      'DELETE FROM bookmarks WHERE userId = ?',
+      [userId]
+    );
+    console.log(`All bookmarks cleared for user ID: ${userId}`);
+  } catch (error) {
+    console.error('Error clearing all bookmarks:', error);
+    throw error;
+  }
+};
+
 export const closeDatabase = (): void => {
   db.closeSync();
   console.log('Database closed');

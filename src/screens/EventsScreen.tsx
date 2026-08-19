@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   StatusBar,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
 import { getNewsByCategory } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
@@ -67,8 +69,13 @@ const EventsScreen: React.FC = ({ navigation }: any) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Events</Text>
-        <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Campus events & activities</Text>
+        <View style={styles.headerLeft}>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Events</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Campus events & activities</Text>
+        </View>
+        <TouchableOpacity style={styles.headerButton} onPress={() => {}}>
+          <Icon name="filter-list" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
 
       {/* Events List */}
@@ -99,9 +106,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 28,
@@ -110,6 +123,9 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     marginTop: 4,
+  },
+  headerButton: {
+    padding: 8,
   },
   listContainer: {
     paddingBottom: 20,
