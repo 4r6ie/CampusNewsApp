@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { NewsItem } from '../types';
-import DatabaseManager from '../database/DatabaseManager';
+import { getNewsByCategory } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -22,10 +22,10 @@ const EventsScreen: React.FC = ({ navigation }: any) => {
     loadEvents();
   }, []);
 
-  const loadEvents = async () => {
+  const loadEvents = () => {
     setRefreshing(true);
     try {
-      const eventsNews = await DatabaseManager.getNewsByCategory('events');
+      const eventsNews = getNewsByCategory('events');
       setEvents(eventsNews);
     } catch (error) {
       console.error('Error loading events:', error);

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
-import DatabaseManager from '../database/DatabaseManager';
+import { addBookmark, removeBookmark } from '../database/DatabaseManager';
 import { useTheme } from '../context/ThemeContext';
 
 interface NewsDetailScreenProps {
@@ -38,14 +38,14 @@ const NewsDetailScreen: React.FC<NewsDetailScreenProps> = ({ route, navigation }
     }
   };
 
-  const handleBookmark = async () => {
+  const handleBookmark = () => {
     try {
       if (isBookmarked) {
-        await DatabaseManager.removeBookmark(news.id, 1);
+        removeBookmark(news.id, 1);
         setIsBookmarked(false);
         Alert.alert('Removed', 'Article removed from bookmarks');
       } else {
-        await DatabaseManager.addBookmark(news.id, 1);
+        addBookmark(news.id, 1);
         setIsBookmarked(true);
         Alert.alert('Saved', 'Article added to bookmarks');
       }

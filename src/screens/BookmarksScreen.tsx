@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NewsItem } from '../types';
-import DatabaseManager from '../database/DatabaseManager';
+import { getBookmarks, removeBookmark } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
 import { useTheme } from '../context/ThemeContext';
 
@@ -24,10 +24,10 @@ const BookmarksScreen: React.FC = ({ navigation }: any) => {
     loadBookmarks();
   }, []);
 
-  const loadBookmarks = async () => {
+  const loadBookmarks = () => {
     setRefreshing(true);
     try {
-      const bookmarkedNews = await DatabaseManager.getBookmarks(1);
+      const bookmarkedNews = getBookmarks(1);
       setBookmarks(bookmarkedNews);
     } catch (error) {
       console.error('Error loading bookmarks:', error);
@@ -40,8 +40,8 @@ const BookmarksScreen: React.FC = ({ navigation }: any) => {
     navigation.navigate('NewsDetail', { news: newsItem });
   };
 
-  const handleBookmark = async (newsId: number) => {
-    await DatabaseManager.removeBookmark(newsId, 1);
+  const handleBookmark = (newsId: number) => {
+    removeBookmark(newsId, 1);
     loadBookmarks();
   };
 

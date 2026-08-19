@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import DatabaseManager from './src/database/DatabaseManager';
+import { initializeDatabase } from './src/database/DatabaseManager';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ThemeProvider } from './src/context/ThemeContext';
 
@@ -11,9 +11,9 @@ const App: React.FC = () => {
     initializeApp();
   }, []);
 
-  const initializeApp = async () => {
+  const initializeApp = () => {
     try {
-      await DatabaseManager.initializeDatabase();
+      initializeDatabase();
     } catch (error) {
       console.error('App initialization failed:', error);
     } finally {

@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { NewsItem, Category } from '../types';
-import DatabaseManager from '../database/DatabaseManager';
+import { getAllNews, getTrendingNews, addBookmark, removeBookmark } from '../database/DatabaseManager';
 import NewsCard from '../components/NewsCard';
 import CategoryTabs from '../components/CategoryTabs';
 import SearchBar from '../components/SearchBar';
@@ -42,11 +42,11 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
     filterNews();
   }, [news, selectedCategory, searchQuery]);
 
-  const loadData = async () => {
+  const loadData = () => {
     setRefreshing(true);
     try {
-      const allNews = await DatabaseManager.getAllNews();
-      const trending = await DatabaseManager.getTrendingNews();
+      const allNews = getAllNews();
+      const trending = getTrendingNews();
       setNews(allNews);
       setTrendingNews(trending);
     } catch (error) {
@@ -78,13 +78,13 @@ const HomeScreen: React.FC = ({ navigation }: any) => {
     navigation.navigate('NewsDetail', { news: newsItem });
   };
 
-  const handleBookmark = async (newsId: number) => {
+  const handleBookmark = (newsId: number) => {
     if (bookmarks.includes(newsId)) {
       setBookmarks(bookmarks.filter(id => id !== newsId));
-      await DatabaseManager.removeBookmark(newsId, 1);
+      removeBookmark(newsId, 1);
     } else {
       setBookmarks([...bookmarks, newsId]);
-      await DatabaseManager.addBookmark(newsId, 1);
+      addBookmark(newsId, 1);
     }
   };
 
