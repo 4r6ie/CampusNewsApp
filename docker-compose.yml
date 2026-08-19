@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Web production build
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+  # Development with hot reload
+  dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+    command: npm start
+
+  # Android emulator (requires KVM/Linux host)
+  android-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    privileged: true
+    devices:
+      - /dev/kvm:/dev/kvm
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+    command: npm run build:android
