@@ -88,7 +88,7 @@ export class PostService {
        VALUES (?, ?, ?, ?, ?, 'published', NOW(), NOW(), NOW())`,
       [id, authorId, input.title, input.body, input.category],
     );
-    await feedCache.invalidatePattern('home:*');
+    await feedCache.invalidatePattern('*:home:*');
     return this.get(id, authorId);
   }
 
@@ -99,7 +99,7 @@ export class PostService {
        WHERE id = ?`,
       [input.title ?? current.title, input.body ?? current.body, input.category ?? current.category, postId],
     );
-    await feedCache.invalidatePattern('home:*');
+    await feedCache.invalidatePattern('*:home:*');
     await postCache.invalidatePattern(`${postId}:*`);
     return this.get(postId, userId);
   }
@@ -110,7 +110,7 @@ export class PostService {
       [postId],
     );
     if (result.affectedRows === 0) throw new AppError(404, 'POST_NOT_FOUND', 'Post not found');
-    await feedCache.invalidatePattern('home:*');
+    await feedCache.invalidatePattern('*:home:*');
     await postCache.invalidatePattern(`${postId}:*`);
   }
 }

@@ -1,4 +1,5 @@
 import { query, execute, RowDataPacket } from '../../database/client';
+import { feedCache } from '../../cache/cache.service';
 import { AppError } from '../../middleware/error.middleware';
 
 interface LikeRow extends RowDataPacket {
@@ -13,11 +14,13 @@ export class LikeService {
       `INSERT IGNORE INTO likes (user_id, post_id, created_at) VALUES (?, ?, NOW())`,
       [userId, postId],
     );
+    await feedCache.invalidatePattern('*:home:*');
     return result.affectedRows > 0;
   }
 
   static async unlike(postId: string, userId: string) {
     await execute(`DELETE FROM likes WHERE user_id = ? AND post_id = ?`, [userId, postId]);
+    await feedCache.invalidatePattern('*:home:*');
   }
 
   static async count(postId: string): Promise<number> {

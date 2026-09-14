@@ -33,7 +33,7 @@ class LikesRepository {
       final data = response.data['data'] as Map<String, dynamic>;
       return LikeResult(
         liked: false,
-        likeCount: (data['likeCount'] as num?)?.toInt() ?? 0,
+        likeCount: (data['count'] as num?)?.toInt() ?? 0,
       );
     } on DioException catch (error) {
       throw apiExceptionFrom(error);

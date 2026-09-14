@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { query, execute, RowDataPacket } from '../../database/client';
+import { feedCache } from '../../cache/cache.service';
 import { AppError } from '../../middleware/error.middleware';
 
 interface CommentRow extends RowDataPacket {
@@ -40,6 +41,7 @@ export class CommentService {
        WHERE c.id = ?`,
       [id],
     );
+    await feedCache.invalidatePattern('*:home:*');
     return rows[0];
   }
 
@@ -51,6 +53,7 @@ export class CommentService {
       throw new AppError(403, 'FORBIDDEN', 'Cannot edit another user\'s comment');
     }
     await execute('UPDATE comments SET body = ?, updated_at = NOW() WHERE id = ?', [body, commentId]);
+    await feedCache.invalidatePattern('*:home:*');
     return this.list(existing[0].post_id, 0, 1);
   }
 
@@ -61,5 +64,6 @@ export class CommentService {
       throw new AppError(403, 'FORBIDDEN', 'Cannot delete another user\'s comment');
     }
     await execute('UPDATE comments SET status = ? WHERE id = ?', ['deleted', commentId]);
+    await feedCache.invalidatePattern('*:home:*');
   }
 }
