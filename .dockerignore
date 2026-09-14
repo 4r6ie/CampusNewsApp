@@ -1,0 +1,16 @@
+.git
+.gitignore
+node_modules
+**/node_modules
+dist
+**/dist
+.env
+.env.*
+!packages/*/src
+apps/mobile
+apps/admin
+docs
+tests
+Makefile
+README.md
+LICENSE

@@ -4,11 +4,20 @@ import type { UserProfile } from './types';
 
 interface ProfileRow extends RowDataPacket, UserProfile {}
 
+const COLUMN_MAP: Record<string, string> = {
+  studentNo: 'student_no',
+  fullName: 'full_name',
+  course: 'course',
+  yearLevel: 'year_level',
+  bio: 'bio',
+  avatarUrl: 'avatar_url',
+};
+
 export class UserService {
   static async getProfile(userId: string): Promise<UserProfile | null> {
     const rows = await query<ProfileRow[]>(
-      `SELECT u.id AS userId, p.full_name AS fullName, p.course, p.year_level AS yearLevel,
-              p.avatar_url AS avatarUrl, p.bio
+      `SELECT u.id AS userId, p.student_no AS studentNo, p.full_name AS fullName,
+              p.course, p.year_level AS yearLevel, p.avatar_url AS avatarUrl, p.bio
        FROM users u JOIN profiles p ON p.user_id = u.id
        WHERE u.id = ? AND u.status = 'active'`,
       [userId],
@@ -17,11 +26,11 @@ export class UserService {
   }
 
   static async updateProfile(userId: string, data: Partial<UserProfile>) {
-    const fields = Object.entries(data).filter(([, v]) => v !== undefined);
+    const fields = Object.entries(data).filter(([, value]) => value !== undefined);
     if (fields.length === 0) return this.getProfile(userId);
 
     const updates = fields
-      .map(([key]) => `${key} = ?`)
+      .map(([key]) => `${COLUMN_MAP[key] ?? key} = ?`)
       .join(', ');
     const values = fields.map(([, v]) => v);
 

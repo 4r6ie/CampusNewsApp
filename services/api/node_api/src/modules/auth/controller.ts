@@ -4,7 +4,6 @@ import { ok, created } from '../../utils/response';
 import { AppError } from '../../middleware/error.middleware';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import { verifyRefreshToken } from '../../utils/token';
-import { signAccessToken, signRefreshToken } from '../../utils/token';
 
 export async function register(req: AuthRequest, res: Response) {
   const result = await AuthService.register(req.body);
@@ -21,11 +20,10 @@ export async function refresh(req: AuthRequest, res: Response) {
   const { refreshToken } = req.body;
   try {
     const payload = verifyRefreshToken(refreshToken);
-    return ok(res, {
-      accessToken: signAccessToken(payload.userId, 'student'),
-      refreshToken: signRefreshToken(payload.userId),
-    });
-  } catch {
+    const result = await AuthService.refresh(payload.userId);
+    return ok(res, result);
+  } catch (err) {
+    if (err instanceof AppError) throw err;
     throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
   }
 }

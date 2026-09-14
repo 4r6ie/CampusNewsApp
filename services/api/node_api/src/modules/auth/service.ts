@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { query, execute, RowDataPacket } from '../../database/client';
 import { hashPassword, verifyPassword } from '../../utils/password';
 import { signAccessToken, signRefreshToken } from '../../utils/token';
@@ -10,6 +11,7 @@ interface UserRow extends RowDataPacket {
   password_hash: string;
   role: string;
   status: string;
+  full_name: string | null;
 }
 
 export class AuthService {
@@ -17,7 +19,7 @@ export class AuthService {
     email: string;
     password: string;
     fullName: string;
-    role: string;
+    studentNo?: string;
   }): Promise<AuthResult> {
     const existing = await query<UserRow[]>(
       'SELECT id FROM users WHERE email = ?',
@@ -28,31 +30,57 @@ export class AuthService {
     }
 
     const passwordHash = await hashPassword(input.password);
-
-    const result = await execute(
-      `INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
-       VALUES (UUID(), ?, ?, ?, 'active', NOW(), NOW())`,
-      [input.email, passwordHash, input.role],
-    );
-
-    const userId = result.insertId.toString();
+    const userId = randomUUID();
 
     await execute(
-      `INSERT INTO profiles (user_id, full_name, created_at, updated_at)
-       VALUES (?, ?, NOW(), NOW())`,
-      [userId, input.fullName],
+      `INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'student', 'active', NOW(), NOW())`,
+      [userId, input.email, passwordHash],
+    );
+
+    await execute(
+      `INSERT INTO profiles (user_id, student_no, full_name, created_at, updated_at)
+       VALUES (?, ?, ?, NOW(), NOW())`,
+      [userId, input.studentNo ?? null, input.fullName],
     );
 
     return {
-      user: { id: userId, email: input.email, role: input.role },
-      accessToken: signAccessToken(userId, input.role),
+      user: {
+        id: userId,
+        email: input.email,
+        role: 'student',
+        fullName: input.fullName,
+      },
+      accessToken: signAccessToken(userId, 'student'),
       refreshToken: signRefreshToken(userId),
+    };
+  }
+
+  static async refresh(userId: string): Promise<AuthResult> {
+    const rows = await query<UserRow[]>(
+      `SELECT u.*, p.full_name
+       FROM users u
+       LEFT JOIN profiles p ON p.user_id = u.id
+       WHERE u.id = ? AND u.status = 'active'`,
+      [userId],
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
+    }
+    return {
+      user: { id: user.id, email: user.email, role: user.role, fullName: user.full_name },
+      accessToken: signAccessToken(user.id, user.role),
+      refreshToken: signRefreshToken(user.id),
     };
   }
 
   static async login(email: string, password: string): Promise<AuthResult> {
     const rows = await query<UserRow[]>(
-      'SELECT * FROM users WHERE email = ?',
+      `SELECT u.*, p.full_name
+       FROM users u
+       LEFT JOIN profiles p ON p.user_id = u.id
+       WHERE u.email = ?`,
       [email],
     );
     const user = rows[0];
@@ -67,7 +95,7 @@ export class AuthService {
     }
 
     return {
-      user: { id: user.id, email: user.email, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, fullName: user.full_name },
       accessToken: signAccessToken(user.id, user.role),
       refreshToken: signRefreshToken(user.id),
     };

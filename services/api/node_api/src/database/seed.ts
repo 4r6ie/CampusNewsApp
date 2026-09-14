@@ -1,6 +1,7 @@
 // Database seeder. Run with: npm run db:seed
 // Mirrors database/seeders/*.seed.ts intent but uses the raw SQL client.
 import { execute, query } from './client';
+import { pool } from '../config/database';
 import { hashPassword } from '../utils/password';
 
 async function seed() {
@@ -29,7 +30,7 @@ async function seed() {
 
   await execute(
     `INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
-     VALUES (?::char(36), 'student@campus.edu', ?, 'student', 'active', NOW(), NOW())`,
+     VALUES (?, 'student@campus.edu', ?, 'student', 'active', NOW(), NOW())`,
     [studentId, adminPassword],
   );
   await execute(
@@ -45,6 +46,7 @@ async function seed() {
   );
 
   console.log('Seeding complete.');
+  await pool.end();
 }
 
 seed().catch((err) => {

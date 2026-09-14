@@ -7,3 +7,9 @@ export const createPostSchema = z.object({
 });
 
 export const updatePostSchema = createPostSchema.partial();
+
+export const listPostsSchema = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
+  category: z.enum(['news', 'event', 'academic', 'general']).optional(),
+});

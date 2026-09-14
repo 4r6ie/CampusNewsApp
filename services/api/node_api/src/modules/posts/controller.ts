@@ -5,12 +5,19 @@ import { AppError } from '../../middleware/error.middleware';
 import { AuthRequest } from '../../middleware/auth.middleware';
 
 export async function listPosts(req: AuthRequest, res: Response) {
-  const result = await PostService.list(req.query.page, req.query.limit);
+  if (!req.userId) throw new AppError(401, 'UNAUTHORIZED', 'Not authenticated');
+  const result = await PostService.list(
+    req.userId,
+    req.query.page,
+    req.query.limit,
+    req.query.category,
+  );
   return ok(res, result.posts, result.meta);
 }
 
 export async function getPost(req: AuthRequest, res: Response) {
-  const post = await PostService.get(req.params.id);
+  if (!req.userId) throw new AppError(401, 'UNAUTHORIZED', 'Not authenticated');
+  const post = await PostService.get(req.params.id, req.userId);
   return ok(res, post);
 }
 
@@ -21,7 +28,8 @@ export async function createPost(req: AuthRequest, res: Response) {
 }
 
 export async function updatePost(req: AuthRequest, res: Response) {
-  const post = await PostService.update(req.params.id, req.body);
+  if (!req.userId) throw new AppError(401, 'UNAUTHORIZED', 'Not authenticated');
+  const post = await PostService.update(req.params.id, req.userId, req.body);
   return ok(res, post);
 }
 

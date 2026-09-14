@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { query, execute, RowDataPacket } from '../../database/client';
 import { AppError } from '../../middleware/error.middleware';
 
@@ -26,17 +27,18 @@ export class CommentService {
   }
 
   static async create(postId: string, userId: string, body: string): Promise<CommentRow> {
-    const result = await execute(
+    const id = randomUUID();
+    await execute(
       `INSERT INTO comments (id, post_id, user_id, body, status, created_at, updated_at)
-       VALUES (UUID(), ?, ?, ?, 'visible', NOW(), NOW())`,
-      [postId, userId, body],
+       VALUES (?, ?, ?, ?, 'visible', NOW(), NOW())`,
+      [id, postId, userId, body],
     );
     const rows = await query<CommentRow[]>(
       `SELECT c.id, c.post_id AS postId, c.user_id AS userId, pr.full_name AS fullName,
               c.body, c.created_at AS createdAt
        FROM comments c JOIN profiles pr ON pr.user_id = c.user_id
        WHERE c.id = ?`,
-      [result.insertId.toString()],
+      [id],
     );
     return rows[0];
   }

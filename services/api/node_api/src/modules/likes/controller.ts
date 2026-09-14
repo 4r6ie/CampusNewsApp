@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { LikeService } from './service';
-import { ok, noContent } from '../../utils/response';
+import { ok } from '../../utils/response';
 import { AppError } from '../../middleware/error.middleware';
 import { AuthRequest } from '../../middleware/auth.middleware';
 
@@ -22,5 +22,3 @@ export async function postLikes(req: AuthRequest, res: Response) {
   const count = await LikeService.count(req.params.postId);
   return ok(res, { count });
 }
-
-export { noContent };
