@@ -1,0 +1,76 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "services/api/**"
+      - "database/**"
+      - "packages/**"
+  pull_request:
+    paths:
+      - "services/api/**"
+      - "database/**"
+      - "packages/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_DATABASE: campus_news
+          MYSQL_USER: campus_app
+          MYSQL_PASSWORD: change_me
+          MYSQL_ROOT_PASSWORD: change_me
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/api/node_api/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/api/node_api
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: services/api/node_api
+        run: npm run typecheck
+
+      - name: Apply migrations
+        working-directory: services/api/node_api
+        run: |
+          for f in ../../database/migrations/*.sql; do
+            mysql -h 127.0.0.1 -u root -pchange_me campus_news < "$f"
+          done
+
+      - name: Run tests
+        working-directory: services/api/node_api
+        run: npm run test
+        env:
+          NODE_ENV: test
+          DATABASE_URL: mysql://campus_app:change_me@127.0.0.1:3306/campus_news
+          REDIS_URL: redis://127.0.0.1:6379
+          JWT_ACCESS_SECRET: test_access_secret
+          JWT_REFRESH_SECRET: test_refresh_secret

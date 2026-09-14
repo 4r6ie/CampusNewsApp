@@ -1,0 +1,183 @@
+// Prisma schema mirroring database/migrations.
+// The project uses raw SQL migrations (database/migrations/*.sql) as the
+// source of truth; this file documents the model for tooling/type generation.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("student")
+  status       String   @default("active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  profile      Profile?
+  posts        Post[]
+  comments     Comment[]
+  likes        Like[]
+  devices      Device[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Profile {
+  userId   String  @id @map("user_id")
+  studentNo String? @unique @map("student_no")
+  fullName String  @map("full_name")
+  course   String?
+  yearLevel String? @map("year_level")
+  avatarUrl String? @map("avatar_url")
+  bio      String?
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  authorId    String   @map("author_id")
+  title       String
+  body        String
+  category    String   @default("general")
+  status      String   @default("draft")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+  media       PostMedia[]
+
+  @@index([publishedAt])
+  @@index([category])
+  @@map("posts")
+}
+
+model PostMedia {
+  id      String @id @default(uuid())
+  postId  String @map("post_id")
+  url     String
+  type    String @default("image")
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_media")
+}
+
+model Comment {
+  id        String @id @default(uuid())
+  postId    String @map("post_id")
+  userId    String @map("user_id")
+  body      String
+  status    String @default("visible")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("comments")
+}
+
+model Like {
+  userId    String @map("user_id")
+  postId    String @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model Announcement {
+  id        String @id @default(uuid())
+  title     String
+  body      String
+  priority  String @default("medium")
+  status    String @default("draft")
+  publishedAt DateTime? @map("published_at")
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([priority])
+  @@map("announcements")
+}
+
+model Device {
+  id         String @id @default(uuid())
+  userId     String @map("user_id")
+  token      String @unique
+  platform   String
+  active     Boolean @default(true)
+  lastSeenAt DateTime? @map("last_seen_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("devices")
+}
+
+model Notification {
+  id        String @id @default(uuid())
+  userId    String @map("user_id")
+  type      String
+  title     String
+  body      String?
+  dataJson  Json?  @map("data_json")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  userId        String  @id @map("user_id")
+  announcements Boolean @default(true)
+  news          Boolean @default(true)
+  comments      Boolean @default(true)
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model Report {
+  id         String @id @default(uuid())
+  reporterId String @map("reporter_id")
+  targetType String @map("target_type")
+  targetId   String @map("target_id")
+  reason     String
+  status     String @default("pending")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("reports")
+}
+
+model AuditLog {
+  id          String @id @default(uuid())
+  actorId     String? @map("actor_id")
+  action      String
+  targetType  String? @map("target_type")
+  targetId    String? @map("target_id")
+  metadataJson Json? @map("metadata_json")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([action])
+  @@map("audit_logs")
+}
