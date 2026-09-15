@@ -72,4 +72,23 @@ class CommentsRepository {
       throw apiExceptionFrom(error);
     }
   }
+
+  Future<void> updateComment(String commentId, {required String content}) async {
+    try {
+      await _dio.patch(
+        '/comments/$commentId',
+        data: {'body': content},
+      );
+    } on DioException catch (error) {
+      throw apiExceptionFrom(error);
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await _dio.delete('/comments/$commentId');
+    } on DioException catch (error) {
+      throw apiExceptionFrom(error);
+    }
+  }
 }

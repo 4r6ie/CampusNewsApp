@@ -1,14 +1,23 @@
+import 'package:campus_news_app/features/search/providers/search_provider.dart';
 import 'package:campus_news_app/features/search/screens/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes.dart';
 import 'test_helpers.dart';
 
 void main() {
   setUpAll(setUpTestFonts);
 
   Future<void> pumpSearch(WidgetTester tester) async {
-    await tester.pumpWidget(wrapInProvider(const SearchScreen()));
+    await tester.pumpWidget(
+      wrapInProvider(
+        const SearchScreen(),
+        overrides: [
+          searchRepositoryProvider.overrideWithValue(FakeSearchRepository()),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

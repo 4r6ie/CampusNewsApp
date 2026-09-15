@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/empty_state.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
-import '../data/mock_notifications.dart';
-import '../models/mock_notification.dart';
+import '../providers/notifications_provider.dart';
 import '../widgets/notification_tile.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -15,47 +14,32 @@ class NotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
-  final List<MockNotificationItem> _items = mockNotifications();
-  bool _loading = true;
-
   @override
   void initState() {
     super.initState();
-    _simulateLoad();
-  }
-
-  Future<void> _simulateLoad() async {
-    setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (mounted) setState(() => _loading = false);
-  }
-
-  bool get _hasUnread => _items.any((item) => !item.isRead);
-
-  void _markAllRead() {
-    setState(() {
-      for (final item in _items) {
-        item.isRead = true;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsProvider.notifier).load();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final unread = _items.where((item) => !item.isRead).length;
+    final notifications = ref.watch(notificationsProvider);
+    final hasUnread = notifications.unreadCount > 0;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
         actions: [
-          if (_hasUnread)
+          if (hasUnread)
             TextButton(
-              onPressed: _markAllRead,
+              onPressed: () =>
+                  ref.read(notificationsProvider.notifier).markAllRead(),
               child: const Text('Mark all read'),
             ),
         ],
       ),
-      body: _loading
+      body: notifications.loading && notifications.items.isEmpty
           ? ListView(
               padding: const EdgeInsets.all(16),
               children: const [
@@ -66,28 +50,30 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 SkeletonLoader(height: 72),
               ],
             )
-          : _items.isEmpty
-              ? const EmptyState(
+          : notifications.items.isEmpty
+              ? EmptyState(
                   icon: Icons.notifications_off_outlined,
-                  message: 'No notifications yet',
+                  message: notifications.error ?? 'No notifications yet',
                 )
               : RefreshIndicator(
-                  onRefresh: _simulateLoad,
+                  onRefresh: () async =>
+                      ref.read(notificationsProvider.notifier).load(force: true),
                   child: ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _items.length,
+                    itemCount: notifications.items.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 4),
-                    itemBuilder: (context, index) =>
-                        NotificationTile(notification: _items[index]),
+                    itemBuilder: (context, index) => NotificationTile(
+                      notification: notifications.items[index],
+                    ),
                   ),
                 ),
-      bottomNavigationBar: _hasUnread
+      bottomNavigationBar: hasUnread
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  '$unread unread',
+                  '${notifications.unreadCount} unread',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.labelMedium,
                 ),

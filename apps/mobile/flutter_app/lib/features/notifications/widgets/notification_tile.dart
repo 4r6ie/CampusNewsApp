@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/relative_time.dart';
-import '../models/mock_notification.dart';
+import '../models/app_notification.dart';
+import '../providers/notifications_provider.dart';
 
-class NotificationTile extends StatelessWidget {
+class NotificationTile extends ConsumerWidget {
   const NotificationTile({super.key, required this.notification});
 
-  final MockNotificationItem notification;
+  final AppNotification notification;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final icon = _typeIcon(notification.type);
@@ -18,6 +20,8 @@ class NotificationTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        onTap: () =>
+            ref.read(notificationsProvider.notifier).markRead(notification.id),
         leading: CircleAvatar(
           backgroundColor: colorScheme.secondaryContainer,
           child: Icon(icon, color: colorScheme.onSecondaryContainer, size: 20),

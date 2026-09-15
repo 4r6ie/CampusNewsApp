@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/utils/relative_time.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../data/comments_repository.dart';
 import '../providers/comments_provider.dart';
 
@@ -52,9 +53,81 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
 
   bool _submitting = false;
 
+  Future<void> _editComment(Comment comment, {String? currentContent}) async {
+    final controller = TextEditingController(
+      text: currentContent ?? comment.content,
+    );
+    final newContent = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit comment'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: null,
+          decoration: const InputDecoration(hintText: 'Write your comment...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) Navigator.of(context).pop(value);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (newContent == null || newContent == comment.content) return;
+
+    try {
+      await _commentsController.updateComment(comment.id, newContent);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update comment')),
+      );
+    }
+  }
+
+  Future<void> _deleteComment(Comment comment) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete comment'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await _commentsController.deleteComment(comment.id);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete comment')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final comments = ref.watch(commentsProvider(widget.postId));
+    final currentUserId = ref.watch(authProvider).user?.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +148,12 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
                         itemCount: comments.comments.length,
                         itemBuilder: (context, index) {
                           final comment = comments.comments[index];
-                          return _CommentTile(comment: comment);
+                          return _CommentTile(
+                            comment: comment,
+                            isMine: comment.authorId == currentUserId,
+                            onEdit: () => _editComment(comment),
+                            onDelete: () => _deleteComment(comment),
+                          );
                         },
                       ),
           ),
@@ -110,9 +188,17 @@ class _CommentsScreenState extends ConsumerState<CommentsScreen> {
 }
 
 class _CommentTile extends StatelessWidget {
-  const _CommentTile({required this.comment});
+  const _CommentTile({
+    required this.comment,
+    required this.isMine,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   final Comment comment;
+  final bool isMine;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +239,23 @@ class _CommentTile extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (isMine) ...[
+                const SizedBox(width: 4),
+                PopupMenuButton<String>(
+                  iconSize: 18,
+                  onSelected: (action) {
+                    if (action == 'edit') {
+                      onEdit();
+                    } else if (action == 'delete') {
+                      onDelete();
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  ],
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 8),

@@ -90,6 +90,31 @@ class CommentsController extends StateNotifier<CommentsState> {
       rethrow;
     }
   }
+
+  Future<void> updateComment(String commentId, String content) async {
+    await _repository.updateComment(commentId, content: content);
+    if (!mounted) return;
+    final index = state.comments.indexWhere((c) => c.id == commentId);
+    if (index == -1) return;
+    final comments = List<Comment>.from(state.comments);
+    comments[index] = Comment(
+      id: comments[index].id,
+      postId: comments[index].postId,
+      authorId: comments[index].authorId,
+      authorName: comments[index].authorName,
+      content: content,
+      createdAt: comments[index].createdAt,
+    );
+    state = state.copyWith(comments: comments);
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    await _repository.deleteComment(commentId);
+    if (!mounted) return;
+    state = state.copyWith(
+      comments: state.comments.where((c) => c.id != commentId).toList(),
+    );
+  }
 }
 
 final commentsRepositoryProvider = Provider<CommentsRepository>((ref) {

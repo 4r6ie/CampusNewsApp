@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/utils/relative_time.dart';
-import '../models/mock_announcement.dart';
+import '../models/announcement.dart';
 
 class AnnouncementTile extends StatelessWidget {
   const AnnouncementTile({super.key, required this.announcement});
 
-  final MockAnnouncement announcement;
+  final Announcement announcement;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +24,6 @@ class AnnouncementTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (announcement.isPinned) ...[
-                  Icon(Icons.push_pin, size: 16, color: foreground),
-                  const SizedBox(width: 6),
-                ],
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
@@ -61,11 +57,6 @@ class AnnouncementTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(color: foreground),
             ),
-            const SizedBox(height: 10),
-            Text(
-              announcement.publishedBy,
-              style: theme.textTheme.labelMedium?.copyWith(color: foreground),
-            ),
           ],
         ),
       ),
@@ -79,12 +70,17 @@ class AnnouncementTile extends StatelessWidget {
           colorScheme.onErrorContainer,
           'URGENT',
         ),
-      AnnouncementPriority.important => (
+      AnnouncementPriority.high => (
           colorScheme.tertiaryContainer,
           colorScheme.onTertiaryContainer,
           'IMPORTANT',
         ),
-      AnnouncementPriority.normal => (
+      AnnouncementPriority.medium => (
+          colorScheme.secondaryContainer,
+          colorScheme.onSecondaryContainer,
+          'UPDATE',
+        ),
+      AnnouncementPriority.low => (
           colorScheme.surfaceContainerHighest,
           colorScheme.onSurface,
           'NORMAL',

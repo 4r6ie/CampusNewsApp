@@ -1,75 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/skeleton_loader.dart';
-import '../data/mock_announcements.dart';
-import '../models/mock_announcement.dart';
+import '../models/announcement.dart';
+import '../providers/announcements_provider.dart';
 import '../widgets/announcement_tile.dart';
 
-class AnnouncementsScreen extends ConsumerStatefulWidget {
+class AnnouncementsScreen extends ConsumerWidget {
   const AnnouncementsScreen({super.key});
 
   @override
-  ConsumerState<AnnouncementsScreen> createState() => _AnnouncementsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final announcements = ref.watch(announcementsProvider);
 
-class _AnnouncementsScreenState extends ConsumerState<AnnouncementsScreen> {
-  bool _loading = true;
+    final expiredFiltered = announcements.announcements
+        .where((a) => a.expiresAt == null || a.expiresAt!.isAfter(DateTime.now()))
+        .toList();
 
-  @override
-  void initState() {
-    super.initState();
-    _simulateLoad();
-  }
-
-  Future<void> _simulateLoad() async {
-    setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (mounted) setState(() => _loading = false);
-  }
-
-  List<MockAnnouncement> get _sorted {
-    final list = mockAnnouncements();
-    int rank(MockAnnouncement a) {
-      if (a.priority == AnnouncementPriority.urgent) return 0;
-      if (a.isPinned || a.priority == AnnouncementPriority.important) return 1;
-      return 2;
-    }
-
-    list.sort((a, b) {
-      final rankCompare = rank(a).compareTo(rank(b));
-      if (rankCompare != 0) return rankCompare;
-      return b.publishedAt.compareTo(a.publishedAt);
-    });
-    return list;
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Announcements')),
-      body: _loading
-          ? ListView(
-              padding: const EdgeInsets.all(16),
-              children: const [
-                SkeletonLoader(height: 90),
-                SizedBox(height: 12),
-                SkeletonLoader(height: 90),
-                SizedBox(height: 12),
-                SkeletonLoader(height: 90),
-              ],
-            )
-          : RefreshIndicator(
-              onRefresh: _simulateLoad,
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: _sorted.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
-                itemBuilder: (context, index) =>
-                    AnnouncementTile(announcement: _sorted[index]),
+      body: _buildBody(
+        ref,
+        context,
+        announcements.loading,
+        expiredFiltered,
+        announcements.error,
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    WidgetRef ref,
+    BuildContext context,
+    bool loading,
+    List<Announcement> announcements,
+    String? error,
+  ) {
+    final theme = Theme.of(context);
+
+    if (loading && announcements.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (announcements.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => ref.read(announcementsProvider.notifier).load(),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            const SizedBox(height: 120),
+            Center(
+              child: Text(
+                error ?? 'No announcements right now.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(announcementsProvider.notifier).load(),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: announcements.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 4),
+        itemBuilder: (context, index) => AnnouncementTile(
+          announcement: announcements[index],
+        ),
+      ),
     );
   }
 }

@@ -42,7 +42,7 @@ export class AnnouncementService {
     const ann = await this.get(result.insertId.toString());
 
     if (ann.priority === 'urgent') {
-      await NotificationService.broadcast('Urgent Announcement', ann.title);
+      await NotificationService.broadcast(ann.title, ann.body);
     }
     return ann;
   }

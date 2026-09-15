@@ -1,6 +1,8 @@
+import 'package:campus_news_app/features/announcements/providers/announcements_provider.dart';
 import 'package:campus_news_app/features/announcements/screens/announcements_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -8,7 +10,13 @@ void main() {
 
   testWidgets('renders announcements with priority badges', (tester) async {
     await tester.pumpWidget(
-      wrapInProvider(const AnnouncementsScreen()),
+      wrapInProvider(
+        const AnnouncementsScreen(),
+        overrides: [
+          announcementsRepositoryProvider
+              .overrideWithValue(FakeAnnouncementsRepository()),
+        ],
+      ),
     );
     await tester.pumpAndSettle();
 

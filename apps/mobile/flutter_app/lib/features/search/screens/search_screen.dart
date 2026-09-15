@@ -2,41 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/empty_state.dart';
-import '../data/mock_search_results.dart';
-import '../models/mock_search_result.dart';
+import '../models/search_result.dart';
+import '../providers/search_provider.dart';
 
-class SearchScreen extends ConsumerStatefulWidget {
+class SearchScreen extends ConsumerWidget {
   const SearchScreen({super.key});
 
   @override
-  ConsumerState<SearchScreen> createState() => _SearchScreenState();
-}
-
-class _SearchScreenState extends ConsumerState<SearchScreen> {
-  final _searchController = TextEditingController();
-  String _query = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<MockSearchResult> get _results {
-    final all = buildMockSearchResults();
-    final query = _query.trim().toLowerCase();
-    if (query.isEmpty) return const [];
-    return all
-        .where((result) =>
-            result.title.toLowerCase().contains(query) ||
-            result.preview.toLowerCase().contains(query) ||
-            result.meta.toLowerCase().contains(query))
-        .toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final results = _results;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final search = ref.watch(searchProvider);
+    final query = search.query;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Search')),
@@ -45,46 +20,57 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
-              controller: _searchController,
               autofocus: true,
               textInputAction: TextInputAction.search,
-              onChanged: (value) => setState(() => _query = value),
+              onChanged: (value) =>
+                  ref.read(searchProvider.notifier).onQueryChanged(value),
               decoration: InputDecoration(
                 hintText: 'Search news, announcements, categories',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isEmpty
+                suffixIcon: query.isEmpty
                     ? null
                     : IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () {
-                          _searchController.clear();
-                          setState(() => _query = '');
+                          ref.read(searchProvider.notifier).onQueryChanged('');
                         },
                       ),
               ),
             ),
           ),
           Expanded(
-            child: _query.isEmpty
-                ? const EmptyState(
-                    icon: Icons.search,
-                    message: 'Type to search across news, announcements, and categories',
-                  )
-                : results.isEmpty
-                    ? EmptyState(
-                        icon: Icons.search_off,
-                        message: 'No results for "$_query"',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: results.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) =>
-                            _SearchResultTile(result: results[index]),
-                      ),
+            child: _buildBody(search),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody(SearchState search) {
+    if (!search.hasSearched) {
+      return const EmptyState(
+        icon: Icons.search,
+        message: 'Type to search across news, announcements, and categories',
+      );
+    }
+
+    if (search.loading && search.results.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (search.results.isEmpty) {
+      return EmptyState(
+        icon: Icons.search_off,
+        message: search.error ?? 'No results for "${search.query}"',
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: search.results.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (context, index) =>
+          _SearchResultTile(result: search.results[index]),
     );
   }
 }
@@ -92,7 +78,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 class _SearchResultTile extends StatelessWidget {
   const _SearchResultTile({required this.result});
 
-  final MockSearchResult result;
+  final SearchResult result;
 
   @override
   Widget build(BuildContext context) {
@@ -103,9 +89,7 @@ class _SearchResultTile extends StatelessWidget {
     return ListTile(
       leading: Icon(
         isAnnouncement ? Icons.campaign_outlined : Icons.article_outlined,
-        color: isAnnouncement
-            ? colorScheme.tertiary
-            : colorScheme.primary,
+        color: isAnnouncement ? colorScheme.tertiary : colorScheme.primary,
       ),
       title: Text(
         result.title,
@@ -114,7 +98,7 @@ class _SearchResultTile extends StatelessWidget {
         style: theme.textTheme.titleSmall,
       ),
       subtitle: Text(
-        result.preview,
+        result.body,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: theme.textTheme.bodySmall?.copyWith(

@@ -13,7 +13,8 @@ void main() {
     await tapNavTab(tester, 'Profile');
 
     expect(find.text('Juan Dela Cruz'), findsOneWidget);
-    expect(find.text('2024-0001'), findsOneWidget);
+    expect(find.text('student@campus.edu'), findsOneWidget);
+    expect(find.text('Student'), findsOneWidget);
 
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();

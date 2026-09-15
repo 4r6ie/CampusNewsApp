@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/dio_provider.dart';
 import '../../../core/storage/token_storage.dart';
+import '../../devices/services/push_token_sync.dart';
 import '../data/auth_repository.dart';
 import '../models/user.dart';
 
@@ -24,12 +25,16 @@ class AuthState {
 }
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController(this._repository)
-      : super(const AuthState(status: AuthStatus.unknown)) {
+  AuthController(
+    this._repository, {
+    Future<void> Function()? onSessionEstablished,
+  })  : _onSessionEstablished = onSessionEstablished,
+        super(const AuthState(status: AuthStatus.unknown)) {
     _restoreSession();
   }
 
   final AuthRepository _repository;
+  final Future<void> Function()? _onSessionEstablished;
 
   Future<void> login({
     required String email,
@@ -37,6 +42,7 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     final result = await _repository.login(email: email, password: password);
     state = AuthState(user: result.user, status: AuthStatus.authenticated);
+    await _onSessionEstablished?.call();
   }
 
   Future<void> register({
@@ -52,6 +58,7 @@ class AuthController extends StateNotifier<AuthState> {
       studentNo: studentNo,
     );
     state = AuthState(user: result.user, status: AuthStatus.authenticated);
+    await _onSessionEstablished?.call();
   }
 
   Future<void> logout() async {
@@ -69,6 +76,7 @@ class AuthController extends StateNotifier<AuthState> {
             ? AuthStatus.unauthenticated
             : AuthStatus.authenticated,
       );
+      if (user != null) await _onSessionEstablished?.call();
     } catch (_) {
       await _repository.logout();
       if (!mounted) return;
@@ -86,5 +94,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final authProvider =
     StateNotifierProvider<AuthController, AuthState>((ref) {
-  return AuthController(ref.watch(authRepositoryProvider));
+  return AuthController(
+    ref.watch(authRepositoryProvider),
+    onSessionEstablished: () =>
+        PushTokenSync(dio: ref.read(dioProvider)).sync(),
+  );
 });

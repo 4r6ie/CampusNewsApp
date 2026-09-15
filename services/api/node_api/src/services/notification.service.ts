@@ -1,6 +1,15 @@
-// Notification delivery via Firebase Cloud Messaging.
+// Notification delivery via Firebase Cloud Messaging plus in-app rows.
+import { query, execute, RowDataPacket } from '../database/client';
 import { getFirebaseApp, isFirebaseConfigured } from '../config/firebase';
 import { logger } from '../config/logger';
+
+interface UserIdRow extends RowDataPacket {
+  id: string;
+}
+
+interface TokenRow extends RowDataPacket {
+  token: string;
+}
 
 export class NotificationService {
   static async sendMulticast(tokens: string[], title: string, body: string) {
@@ -22,7 +31,30 @@ export class NotificationService {
   }
 
   static async broadcast(title: string, body: string) {
-    // Resolve all active devices in production
-    return this.sendMulticast([], title, body);
+    const users = await query<UserIdRow[]>(
+      "SELECT id FROM users WHERE status = 'active'",
+    );
+
+    for (const user of users) {
+      await execute(
+        `INSERT INTO notifications (id, user_id, type, title, body, created_at)
+         VALUES (UUID(), ?, 'URGENT_ANNOUNCEMENT', ?, ?, NOW())`,
+        [user.id, title, body],
+      );
+    }
+
+    const tokenRows = await query<TokenRow[]>(
+      `SELECT d.token FROM devices d
+       JOIN users u ON u.id = d.user_id
+       WHERE d.active = TRUE AND u.status = 'active'`,
+    );
+
+    const push = await this.sendMulticast(
+      tokenRows.map((row) => row.token),
+      title,
+      body,
+    );
+
+    return { ...push, notifications: users.length };
   }
 }
