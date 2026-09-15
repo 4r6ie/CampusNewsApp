@@ -1,6 +1,16 @@
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
-  static const apiBaseUrl = String.fromEnvironment(
+  static const _configured = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:3000/api/v1',
+    defaultValue: '',
   );
+
+  static String get apiBaseUrl {
+    if (_configured.isNotEmpty) return _configured;
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3000/api/v1';
+    }
+    return 'http://localhost:3000/api/v1';
+  }
 }

@@ -6,9 +6,7 @@ import { createCommentSchema } from './schema';
 
 export const commentsRouter = Router();
 
-commentsRouter.use(authenticate);
-
-commentsRouter.get('/posts/:postId/comments', listComments);
-commentsRouter.post('/posts/:postId/comments', validate(createCommentSchema), createComment);
-commentsRouter.patch('/comments/:id', validate(createCommentSchema), updateComment);
-commentsRouter.delete('/comments/:id', deleteComment);
+commentsRouter.get('/posts/:postId/comments', authenticate, listComments);
+commentsRouter.post('/posts/:postId/comments', authenticate, validate(createCommentSchema), createComment);
+commentsRouter.patch('/comments/:id', authenticate, validate(createCommentSchema), updateComment);
+commentsRouter.delete('/comments/:id', authenticate, deleteComment);
