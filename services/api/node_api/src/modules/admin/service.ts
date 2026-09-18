@@ -10,6 +10,12 @@ import type {
   AdminCommentRow,
   AdminReportRow,
   AdminAuditRow,
+  AdminOverview,
+  OverviewRecentPost,
+  OverviewRecentReport,
+  OverviewRecentComment,
+  OverviewRecentAudit,
+  OverviewRecentAnnouncement,
 } from './types';
 
 interface StatsRow extends RowDataPacket, AdminStats {}
@@ -20,6 +26,11 @@ interface AdminAnnouncementRowDb extends RowDataPacket, AdminAnnouncementRow {}
 interface AdminCommentRowDb extends RowDataPacket, AdminCommentRow {}
 interface AdminReportRowDb extends RowDataPacket, AdminReportRow {}
 interface AdminAuditRowDb extends RowDataPacket, AdminAuditRow {}
+interface OverviewRecentPostDb extends RowDataPacket, OverviewRecentPost {}
+interface OverviewRecentReportDb extends RowDataPacket, OverviewRecentReport {}
+interface OverviewRecentCommentDb extends RowDataPacket, OverviewRecentComment {}
+interface OverviewRecentAuditDb extends RowDataPacket, OverviewRecentAudit {}
+interface OverviewRecentAnnouncementDb extends RowDataPacket, OverviewRecentAnnouncement {}
 
 function searchPattern(raw: unknown): string {
   return typeof raw === 'string' && raw.trim() ? `%${raw.trim()}%` : '';
@@ -45,6 +56,59 @@ export class AdminService {
       pendingReports: Number(s.pendingReports),
       auditEvents: Number(s.auditEvents),
     };
+  }
+
+  static async overview(): Promise<AdminOverview> {
+    const [stats, recentPosts, pendingReports, recentComments, recentAudit, recentAnnouncements] =
+      await Promise.all([
+        this.stats(),
+        query<OverviewRecentPostDb[]>(
+          `SELECT p.id, p.title, p.status, p.category, p.published_at AS publishedAt,
+                  pr.full_name AS authorName,
+                  (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likeCount,
+                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS commentCount
+           FROM posts p
+           JOIN profiles pr ON pr.user_id = p.author_id
+           WHERE p.status != 'deleted'
+           ORDER BY p.updated_at DESC
+           LIMIT 5`,
+        ),
+        query<OverviewRecentReportDb[]>(
+          `SELECT r.id, r.target_type AS targetType, r.reason, r.created_at AS createdAt,
+                  pr.full_name AS reporterName
+           FROM reports r
+           JOIN profiles pr ON pr.user_id = r.reporter_id
+           WHERE r.status = 'pending'
+           ORDER BY r.created_at DESC
+           LIMIT 5`,
+        ),
+        query<OverviewRecentCommentDb[]>(
+          `SELECT c.id, c.body, c.status, c.created_at AS createdAt, p.title AS postTitle,
+                  pr.full_name AS authorName
+           FROM comments c
+           JOIN posts p ON p.id = c.post_id
+           JOIN profiles pr ON pr.user_id = c.user_id
+           WHERE c.status != 'deleted'
+           ORDER BY c.created_at DESC
+           LIMIT 5`,
+        ),
+        query<OverviewRecentAuditDb[]>(
+          `SELECT a.id, a.action, a.target_type AS targetType, a.created_at AS createdAt,
+                  u.email AS actorEmail
+           FROM audit_logs a
+           LEFT JOIN users u ON u.id = a.actor_id
+           ORDER BY a.created_at DESC
+           LIMIT 6`,
+        ),
+        query<OverviewRecentAnnouncementDb[]>(
+          `SELECT id, title, priority, status, published_at AS publishedAt
+           FROM announcements
+           WHERE status != 'deleted'
+           ORDER BY created_at DESC
+           LIMIT 4`,
+        ),
+      ]);
+    return { stats, recentPosts, pendingReports, recentComments, recentAudit, recentAnnouncements };
   }
 
   static async listUsers(pageRaw: unknown, limitRaw: unknown, searchRaw: unknown) {

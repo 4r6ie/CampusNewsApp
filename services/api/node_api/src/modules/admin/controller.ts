@@ -9,6 +9,11 @@ export async function getStats(req: AuthRequest, res: Response) {
   return ok(res, stats);
 }
 
+export async function getOverview(req: AuthRequest, res: Response) {
+  const overview = await AdminService.overview();
+  return ok(res, overview);
+}
+
 export async function listUsers(req: AuthRequest, res: Response) {
   const { rows, meta } = await AdminService.listUsers(req.query.page, req.query.limit, req.query.search);
   return ok(res, rows, meta);

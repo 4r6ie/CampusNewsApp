@@ -77,3 +77,56 @@ export interface AdminAuditRow {
   metadataJson: string | null;
   createdAt: Date;
 }
+
+export interface OverviewRecentPost {
+  id: string;
+  title: string;
+  status: string;
+  category: string;
+  authorName: string;
+  publishedAt: Date | null;
+  likeCount: number;
+  commentCount: number;
+}
+
+export interface OverviewRecentReport {
+  id: string;
+  targetType: string;
+  reason: string;
+  reporterName: string;
+  createdAt: Date;
+}
+
+export interface OverviewRecentComment {
+  id: string;
+  body: string;
+  status: string;
+  postTitle: string;
+  authorName: string;
+  createdAt: Date;
+}
+
+export interface OverviewRecentAudit {
+  id: string;
+  action: string;
+  targetType: string | null;
+  actorEmail: string | null;
+  createdAt: Date;
+}
+
+export interface OverviewRecentAnnouncement {
+  id: string;
+  title: string;
+  priority: string;
+  status: string;
+  publishedAt: Date | null;
+}
+
+export interface AdminOverview {
+  stats: AdminStats;
+  recentPosts: OverviewRecentPost[];
+  pendingReports: OverviewRecentReport[];
+  recentComments: OverviewRecentComment[];
+  recentAudit: OverviewRecentAudit[];
+  recentAnnouncements: OverviewRecentAnnouncement[];
+}

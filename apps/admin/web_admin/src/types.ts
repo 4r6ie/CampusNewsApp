@@ -35,6 +35,59 @@ export interface AdminStats {
   auditEvents: number;
 }
 
+export interface OverviewRecentPost {
+  id: string;
+  title: string;
+  status: PostStatus;
+  category: PostCategory;
+  authorName: string;
+  publishedAt: string | null;
+  likeCount: number;
+  commentCount: number;
+}
+
+export interface OverviewRecentReport {
+  id: string;
+  targetType: string;
+  reason: string;
+  reporterName: string;
+  createdAt: string;
+}
+
+export interface OverviewRecentComment {
+  id: string;
+  body: string;
+  status: CommentStatus;
+  postTitle: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface OverviewRecentAudit {
+  id: string;
+  action: string;
+  targetType: string | null;
+  actorEmail: string | null;
+  createdAt: string;
+}
+
+export interface OverviewRecentAnnouncement {
+  id: string;
+  title: string;
+  priority: AnnouncementPriority;
+  status: AnnouncementStatus;
+  publishedAt: string | null;
+}
+
+export interface AdminOverview {
+  stats: AdminStats;
+  recentPosts: OverviewRecentPost[];
+  pendingReports: OverviewRecentReport[];
+  recentComments: OverviewRecentComment[];
+  recentAudit: OverviewRecentAudit[];
+  recentAnnouncements: OverviewRecentAnnouncement[];
+}
+
 export interface AdminUser {
   id: string;
   email: string;

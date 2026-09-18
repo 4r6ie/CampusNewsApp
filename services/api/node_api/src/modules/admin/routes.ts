@@ -4,6 +4,7 @@ import { authorize } from '../../middleware/role.middleware';
 import { validate, validateQuery } from '../../middleware/validation.middleware';
 import {
   getStats,
+  getOverview,
   listUsers,
   updateUserStatus,
   listPosts,
@@ -30,6 +31,7 @@ export const adminRouter = Router();
 adminRouter.use(authenticate, authorize('admin'));
 
 adminRouter.get('/stats', getStats);
+adminRouter.get('/overview', getOverview);
 
 adminRouter.get('/users', validateQuery(adminListQuerySchema), listUsers);
 adminRouter.patch('/users/:id/status', validate(updateUserStatusSchema), updateUserStatus);
