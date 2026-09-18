@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthService } from './service';
-import { ok, created } from '../../utils/response';
+import { DeviceService } from '../devices/service';
+import { ok, created, noContent } from '../../utils/response';
 import { AppError } from '../../middleware/error.middleware';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import { verifyRefreshToken } from '../../utils/token';
@@ -20,10 +21,21 @@ export async function refresh(req: AuthRequest, res: Response) {
   const { refreshToken } = req.body;
   try {
     const payload = verifyRefreshToken(refreshToken);
-    const result = await AuthService.refresh(payload.userId);
+    const result = await AuthService.refresh(payload.userId, payload.jti);
     return ok(res, result);
   } catch (err) {
     if (err instanceof AppError) throw err;
     throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
   }
+}
+
+export async function logout(req: AuthRequest, res: Response) {
+  const { refreshToken } = req.body ?? {};
+  if (typeof refreshToken === 'string' && refreshToken) {
+    await AuthService.revokeSession(refreshToken);
+  }
+  if (req.userId) {
+    await DeviceService.deactivateAll(req.userId);
+  }
+  return noContent(res);
 }

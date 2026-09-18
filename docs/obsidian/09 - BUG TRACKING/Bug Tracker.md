@@ -9,10 +9,10 @@ Open → In Progress → Resolved → Closed
 | Bug ID | Title | Severity | Priority | Status | Environment |
 |--------|-------|----------|----------|--------|-------------|
 | BUG-001 | Feed crashes when image URL is missing | High | P1 | Resolved | Android / API staging |
-| BUG-002 | Refresh token not rotating correctly | High | P1 | Open | All |
-| BUG-003 | Like count drifts from likes table | Medium | P2 | Open | All |
-| BUG-004 | Search fails on special characters | Medium | P3 | Open | All |
-| BUG-005 | Notification tokens persist after logout | Medium | P2 | Open | All |
+| BUG-002 | Refresh token not rotating correctly | High | P1 | Resolved | All |
+| BUG-003 | Like count drifts from likes table | Medium | P2 | Resolved | All |
+| BUG-004 | Search fails on special characters | Medium | P3 | Resolved | All |
+| BUG-005 | Notification tokens persist after logout | Medium | P2 | Resolved | All |
 
 ## Severity Definitions
 

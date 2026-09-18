@@ -18,6 +18,11 @@ interface SearchCachePayload {
   announcements: SearchRow[];
 }
 
+function escapeLike(input: string): string {
+  // Escape LIKE wildcards so user input is matched literally.
+  return input.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+}
+
 export class SearchService {
   static async search(queryText: string, pagination: { offset: number; limit: number }): Promise<SearchCachePayload> {
     const key = CacheKeys.search(queryText);
@@ -25,7 +30,7 @@ export class SearchService {
     if (cached) return cached;
 
     const { offset, limit } = pagination;
-    const like = `%${queryText}%`;
+    const like = `%${escapeLike(queryText)}%`;
 
     const posts = await query<SearchRow[]>(
       `SELECT id, title, body, category, published_at AS publishedAt FROM posts

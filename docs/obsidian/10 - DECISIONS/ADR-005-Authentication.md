@@ -14,8 +14,8 @@ Need secure stateless authentication for the API and mobile app.
   - Refresh token: 7 days TTL
 - Passwords hashed with **bcrypt** (12 rounds)
 - Tokens stored in `flutter_secure_storage` on mobile
-- Refresh endpoint issues a new token pair
-- Logout discards tokens client-side (+ future Redis revocation)
+- Refresh endpoint issues a new token pair; refresh tokens carry a `jti` and are rotated (consumed) via a Redis session store
+- Logout discards tokens client-side and revokes the session + push devices server-side
 
 ## Consequences
 

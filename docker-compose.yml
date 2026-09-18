@@ -20,10 +20,10 @@ services:
     image: mysql:8.0
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_DATABASE: campus_news
-      MYSQL_USER: campus_app
-      MYSQL_PASSWORD: change_me
-      MYSQL_ROOT_PASSWORD: change_me
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-campus_news}
+      MYSQL_USER: ${MYSQL_USER:-campus_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change_me}
     ports:
       - "3306:3306"
     volumes:
@@ -31,7 +31,7 @@ services:
       - ./infrastructure/docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
       - ./infrastructure/docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pchange_me"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-change_me}"]
       interval: 5s
       timeout: 5s
       retries: 10

@@ -29,4 +29,11 @@ export class DeviceService {
     );
     if (result.affectedRows === 0) throw new AppError(404, 'DEVICE_NOT_FOUND', 'Device not found');
   }
+
+  static async deactivateAll(userId: string) {
+    await execute(
+      `UPDATE devices SET active = FALSE WHERE user_id = ? AND active = TRUE`,
+      [userId],
+    );
+  }
 }

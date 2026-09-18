@@ -13,9 +13,11 @@ describe('token utils', () => {
     expect(decoded.role).toBe('student');
   });
 
-  it('signs and verifies a refresh token', () => {
-    const token = signRefreshToken('user-1');
-    expect(verifyRefreshToken(token).userId).toBe('user-1');
+  it('signs and verifies a refresh token with a jti', () => {
+    const token = signRefreshToken('user-1', 'jti-1');
+    const decoded = verifyRefreshToken(token);
+    expect(decoded.userId).toBe('user-1');
+    expect(decoded.jti).toBe('jti-1');
   });
 
   it('throws on a tampered refresh token', () => {

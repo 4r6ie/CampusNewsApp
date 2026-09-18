@@ -35,3 +35,4 @@ export class CacheService {
 export const feedCache = new CacheService('feed');
 export const postCache = new CacheService('post');
 export const searchCache = new CacheService('search');
+export const sessionCache = new CacheService('session');

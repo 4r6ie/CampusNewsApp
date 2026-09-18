@@ -76,7 +76,17 @@ class AuthRepository {
     }
   }
 
-  Future<void> logout() => _storage.clear();
+  Future<void> logout() async {
+    final refreshToken = await _storage.readRefreshToken();
+    if (refreshToken != null) {
+      try {
+        await _dio.post('/auth/logout', data: {'refreshToken': refreshToken});
+      } catch (_) {
+        // Best-effort server revocation; local session is cleared regardless.
+      }
+    }
+    await _storage.clear();
+  }
 
   AuthResult _toAuthResult(dynamic body) {
     final data = body['data'] as Map<String, dynamic>;

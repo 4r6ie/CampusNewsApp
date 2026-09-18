@@ -1,7 +1,15 @@
 import { randomUUID } from 'crypto';
 import { query, execute, RowDataPacket } from '../../database/client';
 import { hashPassword, verifyPassword } from '../../utils/password';
-import { signAccessToken, signRefreshToken } from '../../utils/token';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  generateTokenId,
+} from '../../utils/token';
+import { sessionCache } from '../../cache/cache.service';
+import { CacheKeys } from '../../cache/cache.keys';
+import { CacheTTL } from '../../cache/cache.ttl';
 import { AppError } from '../../middleware/error.middleware';
 import type { AuthResult } from './types';
 
@@ -44,35 +52,7 @@ export class AuthService {
       [userId, input.studentNo ?? null, input.fullName],
     );
 
-    return {
-      user: {
-        id: userId,
-        email: input.email,
-        role: 'student',
-        fullName: input.fullName,
-      },
-      accessToken: signAccessToken(userId, 'student'),
-      refreshToken: signRefreshToken(userId),
-    };
-  }
-
-  static async refresh(userId: string): Promise<AuthResult> {
-    const rows = await query<UserRow[]>(
-      `SELECT u.*, p.full_name
-       FROM users u
-       LEFT JOIN profiles p ON p.user_id = u.id
-       WHERE u.id = ? AND u.status = 'active'`,
-      [userId],
-    );
-    const user = rows[0];
-    if (!user) {
-      throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
-    }
-    return {
-      user: { id: user.id, email: user.email, role: user.role, fullName: user.full_name },
-      accessToken: signAccessToken(user.id, user.role),
-      refreshToken: signRefreshToken(user.id),
-    };
+    return this.issueSession(userId, input.email, 'student', input.fullName);
   }
 
   static async login(email: string, password: string): Promise<AuthResult> {
@@ -94,10 +74,53 @@ export class AuthService {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
     }
 
+    return this.issueSession(user.id, user.email, user.role, user.full_name ?? '');
+  }
+
+  static async refresh(userId: string, jti: string): Promise<AuthResult> {
+    const sessionKey = CacheKeys.session(jti);
+    const sessionExists = await sessionCache.get<string>(sessionKey);
+    if (!sessionExists) {
+      throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
+    }
+    // Rotate: the presented refresh token is consumed and can no longer be reused.
+    await sessionCache.del(sessionKey);
+
+    const rows = await query<UserRow[]>(
+      `SELECT u.*, p.full_name
+       FROM users u
+       LEFT JOIN profiles p ON p.user_id = u.id
+       WHERE u.id = ? AND u.status = 'active'`,
+      [userId],
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired');
+    }
+    return this.issueSession(user.id, user.email, user.role, user.full_name ?? '');
+  }
+
+  static async revokeSession(refreshToken: string) {
+    try {
+      const payload = verifyRefreshToken(refreshToken);
+      await sessionCache.del(CacheKeys.session(payload.jti));
+    } catch {
+      // Best-effort revocation; ignore malformed or already-expired tokens.
+    }
+  }
+
+  private static async issueSession(
+    userId: string,
+    email: string,
+    role: string,
+    fullName: string,
+  ): Promise<AuthResult> {
+    const jti = generateTokenId();
+    await sessionCache.set(CacheKeys.session(jti), userId, CacheTTL.session);
     return {
-      user: { id: user.id, email: user.email, role: user.role, fullName: user.full_name },
-      accessToken: signAccessToken(user.id, user.role),
-      refreshToken: signRefreshToken(user.id),
+      user: { id: userId, email, role, fullName },
+      accessToken: signAccessToken(userId, role),
+      refreshToken: signRefreshToken(userId, jti),
     };
   }
 }
