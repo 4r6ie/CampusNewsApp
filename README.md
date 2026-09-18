@@ -83,8 +83,9 @@ Every directory contains a `README.md` describing its purpose. The canonical doc
 # 1. Environment
 cp .env.example .env
 
-# 2. Infrastructure: MySQL + Redis
+# 2. Infrastructure: MySQL + Redis (+ optional admin + nginx reverse proxy)
 docker compose up -d mysql redis
+docker compose up -d nginx   # optional: reverse proxy in front of API and admin web app
 
 # 3. Migrations + seed data
 ./scripts/migrate.sh
@@ -105,6 +106,14 @@ cd apps/admin/web_admin
 npm install
 npm run dev
 ```
+
+When the nginx stack is up, it routes on [`http://localhost:${NGINX_PORT:-8080}`](http://localhost:8080):
+
+| Path | Backend |
+|------|---------|
+| `/api/v1/` | Node API |
+| `/health` | Node API health check |
+| `/admin/` | Admin web app (static build) |
 
 ### Makefile shortcuts
 

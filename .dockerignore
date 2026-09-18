@@ -8,7 +8,6 @@ dist
 .env.*
 !packages/*/src
 apps/mobile
-apps/admin
 docs
 tests
 Makefile
